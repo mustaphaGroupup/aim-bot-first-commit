@@ -1,56 +1,51 @@
 from PIL import ImageGrab
 
-# import pyautogui
+import math
+import pyautogui
 import cv2
 import numpy as np
-
-
-def rgb_to_hex(r, g, b):
-    return f"#{r:02x}{g:02x}{b:02x}"
+from pathlib import Path
 
 
 def get_positions():
-    rim = cv2.imread("/home/must/Documents/Projects/aim bot/ball.png")
-    ball = cv2.imread("/home/must/Documents/Projects/aim bot/rim.png")
+    rim = cv2.imread(str(Path("rim.png").absolute()))
+    ball = cv2.imread(str(Path("ball.png").absolute()))
     screenshot = ImageGrab.grab(
-        bbox=(0, 1300, 1920, 2160),
+        bbox=(0, 300, 1920, 1080),
         include_layered_windows=False,
         all_screens=False,
     )
-    screenshot.save("/home/must/Documents/Projects/aim bot/screenshot.png")
-    templ = cv2.imread("/home/must/Documents/Projects/aim bot/screenshot.png")
+    screenshot.save(
+        "C:/Users/mchouria/Documents/Projects/ab/aim-bot-first-commit/screenshot.png"
+    )
+    templ = cv2.imread(str(Path("screenshot.png").absolute()))
     rim_position = cv2.matchTemplate(rim, templ, cv2.TM_CCOEFF_NORMED)
     ball_position = cv2.matchTemplate(ball, templ, cv2.TM_CCOEFF_NORMED)
-    print(np.unravel_index(rim_position.argmax(), rim_position.shape))
-    print(np.unravel_index(ball_position.argmax(), ball_position.shape))
+    (rim_pos_y, rim_pos_x) = np.unravel_index(rim_position.argmax(), rim_position.shape)
+    (ball_pos_y, ball_pos_x) = np.unravel_index(
+        ball_position.argmax(), ball_position.shape
+    )
+    g = 981
+    angle = 60
+    delta_x = rim_pos_x - ball_pos_x
+    delta_y = rim_pos_y - ball_pos_y - 2160
+
+    v = math.sqrt(
+        abs(
+            (g * delta_x**2)
+            / (2 * math.cos(angle) ** 2 * (delta_y + (delta_x * math.tan(angle))))
+        )
+    )
+    print("ball: " + str(ball_pos_x) + " " + str(ball_pos_y))
+    print("rim: " + str(rim_pos_x) + " " + str(rim_pos_y))
+    print(v)
 
 
-# def get_rim_approx_pos(image, size):
-#     for x in range(135, 146):
-#         for y in range(424, 446):
-#             if all(x != y for x, y in zip(image.getpixel((x, y)), (255, 255, 255))):
-#                 # if image.getpixel((x, y)) == (36, 39, 58):
-#                 # print("#%02x%02x%02x" % image.getpixel((x, y)))
-#                 print(
-#                     rgb_to_hex(
-#                         image.getpixel((x, y))[0],
-#                         image.getpixel((x, y))[1],
-#                         image.getpixel((x, y))[2],
-#                     )
-#                 )
+def move_mouse():
+    pyautogui.dragTo(1800, 980, duration=0)
+    pyautogui.mouseDown(button="left")
+    pyautogui.dragTo(1500, 580, duration=1)
 
 
-# def move_mouse():
-#     pyautogui.dragTo(1800, 980, duration=0)
-#     pyautogui.mouseDown(button="left")
-#     pyautogui.dragTo(1500, 480, duration=1)
-
-
-# # Capture the entire screen
-# screenshot = ImageGrab.grab()
-
-# # Save the screenshot to a file
-# screenshot.save("./screenshot.png")
-
-# get_rim_approx_pos(screenshot, screenshot.size)
 get_positions()
+move_mouse()
